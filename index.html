@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Maya TJKT - Simulasi Teknologi Serat Optik</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#151e2e',
+                            900: '#0f172a',
+                            950: '#020617',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar untuk Dark Mode */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569; 
+        }
+
+        /* Animasi Aliran Cahaya Laser */
+        @keyframes pulseFlow {
+            0% { stroke-dashoffset: 40; }
+            100% { stroke-dashoffset: 0; }
+        }
+        .laser-beam-animated {
+            stroke-dasharray: 12 8;
+            animation: pulseFlow 0.8s linear infinite;
+        }
+        .laser-beam-paused {
+            stroke-dasharray: 12 8;
+            animation: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- NAVBAR / HEADER -->
+    <header class="bg-slate-900 border-b border-slate-800 px-4 py-3 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30 shadow-lg">
+        <div class="flex items-center gap-3">
+            <div class="bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 p-2.5 rounded-lg">
+                <i class="fa-solid fa-network-wired text-xl"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="font-bold text-lg text-white tracking-wide">LAB MAYA TJKT</h1>
+                    <span class="text-[11px] font-semibold px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">v1.0</span>
+                </div>
+                <p class="text-xs text-slate-400">Bab 2: Teknologi Serat Optik & Link Power Budget</p>
+            </div>
+        </div>
+
+        <!-- Tombol Navigasi Modal -->
+        <nav class="flex flex-wrap items-center gap-2">
+            <button onclick="openModal('modal-teori')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-2">
+                <i class="fa-solid fa-book-open text-cyan-400"></i> Teori Singkat
+            </button>
+            <button onclick="openModal('modal-instruksi')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-amber-400"></i> Instruksi Praktikum
+            </button>
+            <button onclick="openModal('modal-lkpd')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white shadow-md shadow-cyan-950 transition flex items-center gap-2">
+                <i class="fa-solid fa-file-pen"></i> Pertanyaan LKPD
+            </button>
+        </nav>
+    </header>
+
+    <!-- MAIN CONTENT: 3 KOLOM -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 max-w-[1600px] w-full mx-auto">
+        
+        <!-- KOLOM 1 (KIRI): KONTROL PARAMETER INPUT & KONFIGURASI -->
+        <section class="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between shadow-xl">
+            <div class="space-y-4">
+                <div class="border-b border-slate-800 pb-2.5 flex items-center justify-between">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders"></i> Parameter Konfigurasi
+                    </h2>
+                    <button onclick="resetParameters()" title="Reset Default" class="text-xs text-slate-400 hover:text-white transition">
+                        <i class="fa-solid fa-rotate-left"></i> Reset
+                    </button>
+                </div>
+
+                <!-- 1. Jenis Kabel Fiber Optik -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">1. Tipe Kabel Serat Optik</label>
+                    <select id="fiberType" onchange="updateWavelengthOptions(); runSimulation();" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                        <option value="SMF">Single-Mode Fiber (SMF 9/125 µm)</option>
+                        <option value="MMF">Multi-Mode Fiber (MMF 50/125 µm)</option>
+                    </select>
+                    <p id="fiberDesc" class="text-[11px] text-slate-400 mt-1">Core sempit (9µm), 1 jalur cahaya, jarak jauh.</p>
+                </div>
+
+                <!-- 2. Panjang Gelombang (Wavelength) -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">2. Panjang Gelombang (Wavelength)</label>
+                    <select id="wavelength" onchange="runSimulation()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                        <option value="1310" data-loss="0.35">1310 nm (Redaman: 0.35 dB/km)</option>
+                        <option value="1550" data-loss="0.22">1550 nm (Redaman: 0.22 dB/km)</option>
+                    </select>
+                </div>
+
+                <!-- 3. Daya Pancar Transmitter (Tx Power) -->
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <label class="font-semibold text-slate-300">3. Daya Pancar SFP (Tx)</label>
+                        <span id="txVal" class="font-mono text-cyan-400 font-bold">-3.0 dBm</span>
+                    </div>
+                    <input type="range" id="txPower" min="-10" max="5" step="0.5" value="-3" oninput="runSimulation()" class="w-full accent-cyan-500 cursor-pointer">
+                    <div class="flex justify-between text-[10px] text-slate-500">
+                        <span>-10 dBm</span>
+                        <span>0 dBm</span>
+                        <span>+5 dBm</span>
+                    </div>
+                </div>
+
+                <!-- 4. Panjang Kabel (Jarak) -->
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <label class="font-semibold text-slate-300">4. Panjang Bentangan Kabel</label>
+                        <span id="distVal" class="font-mono text-cyan-400 font-bold">20 km</span>
+                    </div>
+                    <input type="range" id="distance" min="1" max="80" step="1" value="20" oninput="runSimulation()" class="w-full accent-cyan-500 cursor-pointer">
+                    <div class="flex justify-between text-[10px] text-slate-500">
+                        <span>1 km</span>
+                        <span>40 km</span>
+                        <span>80 km</span>
+                    </div>
+                </div>
+
+                <!-- 5. Jumlah Konektor & Splicing -->
+                <div class="grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                        <label class="block text-[11px] font-semibold text
